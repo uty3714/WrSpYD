@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+  <LinearLayout
+      android:orientation="vertical"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent">
+
+      <TextView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:padding="10dp"
+          android:text="请输入抖音号:"
+          android:textColor="#333333"
+          android:textSize="14sp" />
+
+      <EditText
+          android:id="@+id/et_input_dy"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="抖音号，唯一标识"
+          android:padding="10dp" />
+
+      <Button
+          android:onClick="commitDyAccount"
+          android:id="@+id/btn_commit_dy_account"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="20dp"
+          android:text="提交"
+          android:textSize="14sp" />
+
+  </LinearLayout>
+
+
+    <ProgressBar
+        android:layout_gravity="center"
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+
+</FrameLayout>
