@@ -36,6 +36,10 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
     protected void onResume() {
         super.onResume();
         //本地取
+
+    }
+
+    private void loadLocalData(){
         String localPath = FileUtils.SD_PATH + "/";
         File localFile = new File(localPath);
 
@@ -61,6 +65,8 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
         hasSu = SuUtils.hasRootAccess(this);
         mList = new ArrayList<>();
 
+        loadLocalData();
+
         mAdapter = new AccountListAdapter(this, mList);
         mAdapter.setICustomClickListener(this);
         mRecyclerView = findViewById(R.id.account_list_view);
@@ -81,20 +87,21 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
 
         if (view.getId() == R.id.item_account_switch_btn) {
             mProgressBar.setVisibility(View.VISIBLE);
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    //杀掉抖音
-                    String killDy = "am force-stop com.ss.android.ugc.aweme";
-                    ShellUtils.execCommand(killDy, hasSu);
-                    //恢复文件
-                    String fileName = FileUtils.SD_PATH + "/" + mList.get(position);
-                    File file = new File(fileName);
-                    switchAccount(file);
-                }
-            }).start();
-
+            Log.i("TAG", "run: 点击的是:" + position);
+            if (mList.size() > position) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //杀掉抖音
+                        String killDy = "am force-stop com.ss.android.ugc.aweme";
+                        ShellUtils.execCommand(killDy, hasSu);
+                        //恢复文件
+                        String fileName = FileUtils.SD_PATH + "/" + mList.get(position);
+                        File file = new File(fileName);
+                        switchAccount(file,position);
+                    }
+                }).start();
+            }
         }
 
     }
@@ -104,7 +111,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
      *
      * @param localFile file
      */
-    private void switchAccount(File localFile) {
+    private void switchAccount(File localFile,int position) {
 
         //删除本地
         //1、 删除5个文件
@@ -123,7 +130,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
         File sharePrefsFile = new File("/data/data/com.ss.android.ugc.aweme/shared_prefs/");
         if (sharePrefsFile.exists()) {
 
-            copyMySdCardFileToData(localFile);
+            copyMySdCardFileToData(localFile,position);
 
         } else {
             //
@@ -132,11 +139,11 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
         }
 
         //复制到本地
-        copyMySdCardFileToData(localFile);
+        copyMySdCardFileToData(localFile,position);
 
     }
 
-    private void copyMySdCardFileToData(File localFile) {
+    private void copyMySdCardFileToData(File localFile, final int position) {
 
         String[] copyFiles = new String[]{
                 "cp " + localFile.getAbsolutePath() + "/aweme_user.xml /data/data/com.ss.android.ugc.aweme/shared_prefs/",
@@ -163,6 +170,13 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
                 mProgressBar.setVisibility(View.GONE);
 
                 try {
+                    Log.i("TAG", "run: 要删除的是:" + position);
+                    mList.remove(position);
+                    if(mList.size() == 0){
+                        loadLocalData();
+                    }else{
+                        mAdapter.notifyDataSetChanged();
+                    }
                     Intent launchIntentForPackage = getApplicationContext().getPackageManager().getLaunchIntentForPackage("com.ss.android.ugc.aweme");
                     startActivity(launchIntentForPackage);
                 } catch (Exception e) {
