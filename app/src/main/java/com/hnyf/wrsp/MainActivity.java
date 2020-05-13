@@ -49,8 +49,11 @@ public class MainActivity extends AppCompatActivity {
         mCurAccountName = JkSharedPreUtils.getPreferenceString("Account", "");
         mCurAccountPath = JkSharedPreUtils.getPreferenceString("Path", "");
         mCurAccountText.setText(mCurAccountName);
-
+        Log.i("TAG","su? = " + hasSu);
+        long startTime = System.currentTimeMillis();
         boolean hasSu = SuUtils.hasRootAccess(this);
+        long endTime = System.currentTimeMillis();
+        Log.i("TAG", "su?: " + (endTime - startTime));
         Log.i("TAG", "hasSu = " + hasSu);
 
         if (Build.VERSION.SDK_INT >= 23) {
@@ -142,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
                 "rm -rf /data/data/com.ss.android.ugc.aweme/shared_prefs/*",
         };
 
-        ShellUtils.CommandResult commandResult3 = ShellUtils.execCommand(rmFiles, hasSu, true);
+        ShellUtils.CommandResult commandResult3 = ShellUtils.execCommand(rmFiles, SuUtils.hasRootAccess(this), true);
         Log.i("TAG", "删除之后" + commandResult3.toString());
 
         //判断本地是否有 shared_prefs 文件夹
@@ -154,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             //
             String makeDir = "mkdir /data/data/com.ss.android.ugc.aweme/shared_prefs";
-            ShellUtils.CommandResult commandResult = ShellUtils.execCommand(makeDir, hasSu, true);
+            ShellUtils.CommandResult commandResult = ShellUtils.execCommand(makeDir, SuUtils.hasRootAccess(this), true);
         }
 
         //复制到本地
@@ -172,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                 "cp " + localFile.getAbsolutePath() + "/MainTabPreferences.xml /data/data/com.ss.android.ugc.aweme/shared_prefs/"
         };
 
-        final ShellUtils.CommandResult commandResult = ShellUtils.execCommand(copyFiles, hasSu, true);
+        final ShellUtils.CommandResult commandResult = ShellUtils.execCommand(copyFiles, SuUtils.hasRootAccess(this), true);
         Log.i("TAG", "更新账号结果:" + commandResult.result);
 
         //修改权限
@@ -180,19 +183,12 @@ public class MainActivity extends AppCompatActivity {
                 "chmod 777 /data/data/com.ss.android.ugc.aweme/shared_prefs",
                 "chmod -R 777 /data/data/com.ss.android.ugc.aweme/shared_prefs/*",
         };
-        ShellUtils.execCommand(chmod, hasSu);
+        ShellUtils.execCommand(chmod, SuUtils.hasRootAccess(this));
 
         new Handler(getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
                 Toast.makeText(MainActivity.this, "更新账号结果:" + ((commandResult.result == 0) ? "成功" : "失败"), Toast.LENGTH_SHORT).show();
-                try {
-                    Intent launchIntentForPackage = getApplicationContext().getPackageManager().getLaunchIntentForPackage("com.ss.android.ugc.aweme");
-                    startActivity(launchIntentForPackage);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
             }
         });
 

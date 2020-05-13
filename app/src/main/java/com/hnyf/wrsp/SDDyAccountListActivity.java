@@ -54,6 +54,7 @@ public class SDDyAccountListActivity  extends AppCompatActivity implements ICust
             File[] files = localFile.listFiles();
             if (files != null && files.length > 0) {
                 mList.clear();
+                mPathList.clear();
                 for (File f : files) {
                     mList.add(f.getName());
                     mPathList.add(f.getAbsolutePath());
@@ -99,6 +100,8 @@ public class SDDyAccountListActivity  extends AppCompatActivity implements ICust
 
                 if(mPathList.size() > position){
                     EventBus.getDefault().post(new EventCheckAccont(mList.get(position),mPathList.get(position)));
+                }else{
+                    Log.i("TAG","mPathList,size < pos");
                 }
 
                 //复制剪切板

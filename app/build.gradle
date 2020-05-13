@@ -11,10 +11,31 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        debugConfig {
+            keyAlias "xiaob"
+            keyPassword "xiaob!@#\$"
+            storeFile file("D:/app/work_proj/android/sign/bz/xiaob.keystore")
+            storePassword "xiaob!@#\$"
+        }
+        release {
+            keyAlias "xiaob"
+            keyPassword "xiaob!@#\$"
+            storeFile file("D:/app/work_proj/android/sign/bz/xiaob.keystore")
+            storePassword "xiaob!@#\$"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debugConfig
         }
     }
 }
@@ -30,7 +51,7 @@ dependencies {
     api 'com.google.code.gson:gson:2.8.6'
     //recyclerView
     api 'androidx.recyclerview:recyclerview:1.1.0'
-
+    implementation 'com.google.code.gson:gson:2.8.4'
     //enentBus
     api 'org.greenrobot:eventbus:3.1.1'
 

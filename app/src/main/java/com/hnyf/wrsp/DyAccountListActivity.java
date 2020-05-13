@@ -15,6 +15,8 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.hnyf.wrsp.adapter.AccountListAdapter;
 import com.hnyf.wrsp.event.EventCheckAccont;
 import com.hnyf.wrsp.listener.ICustomClickListener;
@@ -46,22 +48,36 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
 
     }
 
-    private void loadLocalData(){
-        String localPath = FileUtils.SD_PATH + "/";
-        File localFile = new File(localPath);
+    private void loadLocalData() {
+        //从sp里取
+        String spListStr = JkSharedPreUtils.getPreferenceString("DyAccountListActivityName", "[]");
+        String spListPathStr = JkSharedPreUtils.getPreferenceString("DyAccountListActivityPath", "[]");
+        Log.i("TAG", "从sp 里取: spListStr = " + spListStr);
+        Log.i("TAG", "从sp 里取: spListPathStr = " + spListPathStr);
+        mList.clear();
+        mPathList.clear();
 
-        if (localFile.exists()) {
-            File[] files = localFile.listFiles();
-            if (files != null && files.length > 0) {
-                mList.clear();
+        if ("[]".equals(spListStr)) {
+            String localPath = FileUtils.SD_PATH + "/";
+            File localFile = new File(localPath);
+            if (localFile.exists()) {
+                File[] files = localFile.listFiles();
                 for (File f : files) {
                     mList.add(f.getName());
                     mPathList.add(f.getAbsolutePath());
-                }
-                if (mAdapter != null) {
-                    mAdapter.notifyDataSetChanged();
+                    JkSharedPreUtils.setPreferenceString("DyAccountListActivityName", new Gson().toJson(mList));
+                    JkSharedPreUtils.setPreferenceString("DyAccountListActivityPath", new Gson().toJson(mPathList));
                 }
             }
+        } else {
+            //解析
+            mList = new Gson().fromJson(spListStr, new TypeToken<List<String>>() {
+            }.getType());
+            mPathList = new Gson().fromJson(spListPathStr,new TypeToken<List<String>>(){}.getType());
+        }
+
+        if (mAdapter != null) {
+            mAdapter.notifyDataSetChanged();
         }
     }
 
@@ -99,12 +115,14 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
             Log.i("TAG", "run: 点击的是:" + position);
             if (mList.size() > position) {
 
-                if(mPathList.size() > position){
-                    EventBus.getDefault().post(new EventCheckAccont(mList.get(position),mPathList.get(position)));
+                if (mPathList.size() > position) {
+                    EventBus.getDefault().post(new EventCheckAccont(mList.get(position), mPathList.get(position)));
+                } else {
+                    Log.i("TAG", "mPathList,size < pos");
                 }
 
                 //复制剪切板
-                JkClipboardUtils.get().copyStrToClipboard(getApplicationContext(),mList.get(position));
+                JkClipboardUtils.get().copyStrToClipboard(getApplicationContext(), mList.get(position));
 
 
                 new Thread(new Runnable() {
@@ -116,7 +134,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
                         //恢复文件
                         String fileName = FileUtils.SD_PATH + "/" + mList.get(position);
                         File file = new File(fileName);
-                        switchAccount(file,position);
+                        switchAccount(file, position);
                     }
                 }).start();
             }
@@ -129,7 +147,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
      *
      * @param localFile file
      */
-    private void switchAccount(File localFile,int position) {
+    private void switchAccount(File localFile, int position) {
 
         //删除本地
         //1、 删除5个文件
@@ -148,7 +166,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
         File sharePrefsFile = new File("/data/data/com.ss.android.ugc.aweme/shared_prefs/");
         if (sharePrefsFile.exists()) {
 
-            copyMySdCardFileToData(localFile,position);
+            copyMySdCardFileToData(localFile, position);
 
         } else {
             //
@@ -157,7 +175,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
         }
 
         //复制到本地
-        copyMySdCardFileToData(localFile,position);
+        copyMySdCardFileToData(localFile, position);
 
     }
 
@@ -190,9 +208,14 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
                 try {
                     Log.i("TAG", "run: 要删除的是:" + position);
                     mList.remove(position);
-                    if(mList.size() == 0){
+                    mPathList.remove(position);
+
+                    JkSharedPreUtils.setPreferenceString("DyAccountListActivityName", new Gson().toJson(mList));
+                    JkSharedPreUtils.setPreferenceString("DyAccountListActivityPath", new Gson().toJson(mPathList));
+
+                    if (mList.size() == 0) {
                         loadLocalData();
-                    }else{
+                    } else {
                         mAdapter.notifyDataSetChanged();
                     }
                     Intent launchIntentForPackage = getApplicationContext().getPackageManager().getLaunchIntentForPackage("com.ss.android.ugc.aweme");
