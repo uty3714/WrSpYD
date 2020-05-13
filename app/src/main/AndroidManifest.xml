@@ -27,6 +27,8 @@
 
         <activity android:name=".DyAccountListActivity"/>
 
+        <activity android:name=".SDDyAccountListActivity"/>
+
     </application>
 
 </manifest>

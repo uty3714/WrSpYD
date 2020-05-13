@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 自动切换
+ * 手动切换
  */
-public class DyAccountListActivity extends AppCompatActivity implements ICustomClickListener {
+public class SDDyAccountListActivity  extends AppCompatActivity implements ICustomClickListener {
 
     private RecyclerView mRecyclerView;
     private ProgressBar mProgressBar;
@@ -43,10 +43,10 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
     protected void onResume() {
         super.onResume();
         //本地取
-
+        loadLocalData();
     }
 
-    private void loadLocalData(){
+    private void loadLocalData() {
         String localPath = FileUtils.SD_PATH + "/";
         File localFile = new File(localPath);
 
@@ -73,8 +73,6 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
         hasSu = SuUtils.hasRootAccess(this);
         mList = new ArrayList<>();
         mPathList = new ArrayList<>();
-
-        loadLocalData();
 
         mAdapter = new AccountListAdapter(this, mList);
         mAdapter.setICustomClickListener(this);
@@ -106,7 +104,6 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
                 //复制剪切板
                 JkClipboardUtils.get().copyStrToClipboard(getApplicationContext(),mList.get(position));
 
-
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -116,7 +113,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
                         //恢复文件
                         String fileName = FileUtils.SD_PATH + "/" + mList.get(position);
                         File file = new File(fileName);
-                        switchAccount(file,position);
+                        switchAccount(file, position);
                     }
                 }).start();
             }
@@ -129,7 +126,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
      *
      * @param localFile file
      */
-    private void switchAccount(File localFile,int position) {
+    private void switchAccount(File localFile, int position) {
 
         //删除本地
         //1、 删除5个文件
@@ -148,7 +145,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
         File sharePrefsFile = new File("/data/data/com.ss.android.ugc.aweme/shared_prefs/");
         if (sharePrefsFile.exists()) {
 
-            copyMySdCardFileToData(localFile,position);
+            copyMySdCardFileToData(localFile, position);
 
         } else {
             //
@@ -157,7 +154,7 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
         }
 
         //复制到本地
-        copyMySdCardFileToData(localFile,position);
+        copyMySdCardFileToData(localFile, position);
 
     }
 
@@ -184,17 +181,10 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
         new Handler(getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(DyAccountListActivity.this, "更新账号结果:" + ((commandResult.result == 0) ? "成功" : "失败"), Toast.LENGTH_SHORT).show();
+                Toast.makeText(SDDyAccountListActivity.this, "更新账号结果:" + ((commandResult.result == 0) ? "成功" : "失败"), Toast.LENGTH_SHORT).show();
                 mProgressBar.setVisibility(View.GONE);
 
                 try {
-                    Log.i("TAG", "run: 要删除的是:" + position);
-                    mList.remove(position);
-                    if(mList.size() == 0){
-                        loadLocalData();
-                    }else{
-                        mAdapter.notifyDataSetChanged();
-                    }
                     Intent launchIntentForPackage = getApplicationContext().getPackageManager().getLaunchIntentForPackage("com.ss.android.ugc.aweme");
                     startActivity(launchIntentForPackage);
                 } catch (Exception e) {
@@ -206,5 +196,4 @@ public class DyAccountListActivity extends AppCompatActivity implements ICustomC
 
 
     }
-
 }

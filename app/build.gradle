@@ -30,4 +30,8 @@ dependencies {
     api 'com.google.code.gson:gson:2.8.6'
     //recyclerView
     api 'androidx.recyclerview:recyclerview:1.1.0'
+
+    //enentBus
+    api 'org.greenrobot:eventbus:3.1.1'
+
 }
