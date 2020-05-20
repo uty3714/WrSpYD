@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -117,10 +118,24 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
 
                 File file = new File(mCurAccountPath);
+                Log.i("TAG","当前账号的路径："+ file.getAbsolutePath());
                 if (!file.exists()) {
                     file.mkdirs();
                 }
-                switchAccount(file);
+
+                if(file.listFiles() != null && file.listFiles().length >0){
+                    for (File listFile : file.listFiles()) {
+                        boolean deleteResult = listFile.delete();
+                        Log.i("TAG","删除结果result:"+deleteResult);
+                    }
+                }
+
+                Log.i("TAG","删除后的文件列表:" + file.listFiles().length);
+
+                //重新保存一份
+                copyDataFileToMySDCard(file);
+
+
             }
         }).start();
 
@@ -129,70 +144,31 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * 切换账号
+     * 保存文件
      *
-     * @param localFile file
+     * @param file 本地文件夹
      */
-    private void switchAccount(File localFile) {
-
-        //删除本地
-        //1、 删除5个文件
-        String[] rmFiles = new String[]{
-                "rm -rf /data/data/com.ss.android.ugc.aweme/cache/*",
-                "rm -rf /data/data/com.ss.android.ugc.aweme/app_*",
-                "rm -rf /data/data/com.ss.android.ugc.aweme/databases",
-                "rm -rf /data/data/com.ss.android.ugc.aweme/files",
-                "rm -rf /data/data/com.ss.android.ugc.aweme/shared_prefs/*",
-        };
-
-        ShellUtils.CommandResult commandResult3 = ShellUtils.execCommand(rmFiles, SuUtils.hasRootAccess(this), true);
-        Log.i("TAG", "删除之后" + commandResult3.toString());
-
-        //判断本地是否有 shared_prefs 文件夹
-        File sharePrefsFile = new File("/data/data/com.ss.android.ugc.aweme/shared_prefs/");
-        if (sharePrefsFile.exists()) {
-
-            copyMySdCardFileToData(localFile);
-
-        } else {
-            //
-            String makeDir = "mkdir /data/data/com.ss.android.ugc.aweme/shared_prefs";
-            ShellUtils.CommandResult commandResult = ShellUtils.execCommand(makeDir, SuUtils.hasRootAccess(this), true);
-        }
-
-        //复制到本地
-        copyMySdCardFileToData(localFile);
-
-    }
-
-    private void copyMySdCardFileToData(File localFile) {
+    private void copyDataFileToMySDCard(File file) {
 
         String[] copyFiles = new String[]{
-                "cp " + localFile.getAbsolutePath() + "/aweme_user.xml /data/data/com.ss.android.ugc.aweme/shared_prefs/",
-                "cp " + localFile.getAbsolutePath() + "/token_shared_preference.xml /data/data/com.ss.android.ugc.aweme/shared_prefs/",
-                "cp " + localFile.getAbsolutePath() + "/LoginSharePreferences.xml /data/data/com.ss.android.ugc.aweme/shared_prefs/",
-                "cp " + localFile.getAbsolutePath() + "/com.bytedance.sdk.account_setting.xml /data/data/com.ss.android.ugc.aweme/shared_prefs/",
-                "cp " + localFile.getAbsolutePath() + "/MainTabPreferences.xml /data/data/com.ss.android.ugc.aweme/shared_prefs/"
+                //复制
+                "cp /data/data/com.ss.android.ugc.aweme/shared_prefs/aweme_user.xml " + file.getAbsolutePath(),
+                "cp /data/data/com.ss.android.ugc.aweme/shared_prefs/token_shared_preference.xml " + file.getAbsolutePath(),
+                "cp /data/data/com.ss.android.ugc.aweme/shared_prefs/LoginSharePreferences.xml " + file.getAbsolutePath(),
+                "cp /data/data/com.ss.android.ugc.aweme/shared_prefs/com.bytedance.sdk.account_setting.xml " + file.getAbsolutePath(),
+                "cp /data/data/com.ss.android.ugc.aweme/shared_prefs/MainTabPreferences.xml " + file.getAbsolutePath(),
+
         };
 
-        final ShellUtils.CommandResult commandResult = ShellUtils.execCommand(copyFiles, SuUtils.hasRootAccess(this), true);
-        Log.i("TAG", "更新账号结果:" + commandResult.result);
+        final ShellUtils.CommandResult commandResult = ShellUtils.execCommand(copyFiles, hasSu, true);
+        Log.i("TAG", "保存到本地:" + file.getAbsolutePath() + ",结果:" + commandResult.toString());
 
-        //修改权限
-        String[] chmod = new String[]{
-                "chmod 777 /data/data/com.ss.android.ugc.aweme/shared_prefs",
-                "chmod -R 777 /data/data/com.ss.android.ugc.aweme/shared_prefs/*",
-        };
-        ShellUtils.execCommand(chmod, SuUtils.hasRootAccess(this));
-
-        new Handler(getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(MainActivity.this, "更新账号结果:" + ((commandResult.result == 0) ? "成功" : "失败"), Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
+       new Handler(Looper.getMainLooper()).post(new Runnable() {
+           @Override
+           public void run() {
+               Toast.makeText(MainActivity.this, "更新结果:" + (commandResult.result == 0 ? "成功" : "失败"), Toast.LENGTH_SHORT).show();
+           }
+       });
     }
 
 
